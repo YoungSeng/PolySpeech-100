@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolySpeech Earth & Dialect Rewrite System</title>
+    <style>
+        /* =========================================
+           1. 全局布局 (Global Layout)
+           ========================================= */
+        :root {
+            --bg-color: #020408;
+            --panel-bg: rgba(13, 17, 23, 0.95);
+            --color-vip: #00ff88;
+            --color-dialect: #ff9900;
+            --color-normal: #0099ff;
+            --text-main: #f0f6fc;
+            --text-sub: #8b949e;
+            --border-color: #30363d;
+        }
+
+        body {
+            margin: 0; overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            width: 100vw; height: 100vh;
+        }
+
+        /* 左侧 3/4 - 地球区域 */
+        #left-region {
+            width: 75%;
+            height: 100%;
+            position: relative;
+            background: radial-gradient(circle at center, #1a1f25 0%, #000 100%);
+            border-right: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        /* 右侧 1/4 - Dialect Rewrite 区域 */
+        #right-region {
+            width: 25%;
+            height: 100%;
+            background: var(--panel-bg);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 30px rgba(0,0,0,0.8);
+            z-index: 20;
+        }
+
+        /* =========================================
+           2. 左侧样式 (Earth Styles)
+           ========================================= */
+        /* 标题与图例 */
+        #earth-header { position: absolute; top: 20px; left: 20px; z-index: 10; pointer-events: none; }
+        h1 { margin: 0; font-size: 24px; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+
+        /* ====== 新增: HF 按钮样式 ====== */
+        /*.hf-badge {*/
+        /*    display: inline-flex; align-items: center; gap: 6px;*/
+        /*    margin-top: 10px; padding: 6px 14px;*/
+        /*    background: rgba(255, 210, 30, 0.15); !* HF 品牌黄底色 *!*/
+        /*    border: 1px solid #FFD21E; color: #FFD21E;*/
+        /*    text-decoration: none; font-size: 13px; font-weight: bold;*/
+        /*    border-radius: 8px; pointer-events: auto; !* 恢复点击响应 *!*/
+        /*    transition: all 0.3s ease; backdrop-filter: blur(4px);*/
+        /*    box-shadow: 0 2px 8px rgba(0,0,0,0.5);*/
+        /*}*/
+        /*.hf-badge:hover {*/
+        /*    background: #FFD21E; color: #000;*/
+        /*    box-shadow: 0 0 15px rgba(255, 210, 30, 0.4);*/
+        /*    transform: translateY(-1px);*/
+        /*}*/
+
+        .hf-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-top: 12px; padding: 8px 18px;
+            background: linear-gradient(90deg, #FFD21E, #ffea8c); /* 亮眼的渐变黄 */
+            color: #000; /* 黑字黄底，对比度拉满 */
+            text-decoration: none; font-size: 14px; font-weight: 800; letter-spacing: 0.5px;
+            border-radius: 8px; pointer-events: auto;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 210, 30, 0.4);
+            animation: hf-pulse 2s infinite; /* 呼吸灯特效 */
+        }
+
+        .hf-badge:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 0 25px rgba(255, 210, 30, 0.8);
+        }
+
+        /* 呼吸发光动画 */
+        @keyframes hf-pulse {
+            0% { box-shadow: 0 0 10px rgba(255, 210, 30, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(255, 210, 30, 0.9); }
+            100% { box-shadow: 0 0 10px rgba(255, 210, 30, 0.4); }
+        }
+
+        /* =============================== */
+
+        .legend { margin-top: 10px; display: flex; gap: 15px; background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 8px; pointer-events: auto; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
+        .legend-item { display: flex; align-items: center; font-size: 12px; font-weight: 600; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+
+        /* 画布 */
+        #earth-canvas { width: 100%; height: 100%; outline: none; }
+        #loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #666; font-family: monospace; pointer-events: none; }
+
+        /* 左侧滑动面板 (Earth Panel) */
+        #earth-panel {
+            position: absolute; top: 0; right: -500px; /* 初始隐藏在右侧 */
+            width: 450px; height: 100%;
+            background: rgba(13, 17, 23, 0.98);
+            border-left: 1px solid #30363d;
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column; z-index: 20;
+            backdrop-filter: blur(10px);
+        }
+        #earth-panel.active { right: 0; } /* 滑出时贴着 left-region 的右边缘 */
+
+        .panel-header { padding: 20px; border-bottom: 1px solid #30363d; background: rgba(255,255,255,0.02); }
+        .lang-title { font-size: 24px; margin: 0 0 8px 0; font-weight: 300; }
+        .badges { display: flex; gap: 8px; }
+        .badge { padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; border: 1px solid; text-transform: uppercase; }
+        .panel-body { flex: 1; overflow-y: auto; padding: 20px; }
+
+        /* 左侧音频列表项 */
+        .section { margin-bottom: 25px; }
+        .section-title { font-size: 10px; text-transform: uppercase; color: var(--text-sub); margin-bottom: 10px; letter-spacing: 1px; font-weight: 700; border-left: 3px solid #30363d; padding-left: 10px; }
+        .audio-row {
+            display: flex; gap: 10px; padding: 10px; margin-bottom: 6px;
+            background: rgba(255,255,255,0.03); border-radius: 6px;
+            border: 1px solid transparent; transition: all 0.2s; align-items: flex-start;
+        }
+        .audio-row:hover { background: rgba(255,255,255,0.06); }
+        .audio-row.playing { border-color: var(--color-vip); background: rgba(0, 255, 136, 0.08); }
+
+        .play-btn {
+            width: 28px; height: 28px; border-radius: 50%; border: 1px solid #30363d;
+            background: #21262d; color: var(--color-vip); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;
+        }
+        .play-btn.active { background: var(--color-vip); color: #000; }
+        .text-content { font-size: 14px; line-height: 1.5; color: var(--text-main); flex: 1; }
+
+        .panel-footer { padding: 15px; border-top: 1px solid #30363d; background: #0d1117; display: flex; align-items: center; justify-content: space-between; }
+        .main-play-btn {
+            background: var(--color-vip); color: #000; border: none; padding: 8px 20px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;
+        }
+        .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #888; font-size: 24px; cursor: pointer; }
+
+
+        /* =========================================
+           3. 右侧样式 (Comparison Styles)
+           ========================================= */
+        #right-region h2 {
+            font-size: 18px; font-weight: 300; letter-spacing: 1px; margin: 0;
+            padding: 20px; border-bottom: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.02);
+        }
+        #right-region h2 span { color: var(--color-dialect); font-weight: bold; }
+
+        /* 列表区域 */
+        #comp-list {
+            flex: 1; /* 占据上半部分 */
+            overflow-y: auto;
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px;
+        }
+        .comp-item {
+            padding: 12px; margin-bottom: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px; cursor: pointer;
+            transition: all 0.2s; border-left: 3px solid transparent;
+        }
+        .comp-item:hover { background: rgba(255,255,255,0.1); }
+        .comp-item.active { background: rgba(255, 153, 0, 0.15); border-left-color: var(--color-dialect); }
+        .comp-title { font-weight: bold; color: var(--color-dialect); font-size: 13px; }
+        .comp-subtitle { font-size: 11px; color: var(--text-sub); margin-top: 4px; }
+
+        /* 详情/Rewrite 区域 (固定在下方) */
+        #comp-detail {
+            height: 55%; /* 下半部分 */
+            display: flex; flex-direction: column;
+            background: #0d1117;
+            padding: 20px;
+            overflow-y: auto;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .flow-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; padding: 15px;
+            margin-bottom: 15px;
+        }
+        .flow-title {
+            font-size: 10px; text-transform: uppercase; color: var(--text-sub);
+            margin-bottom: 10px; font-weight: bold; display: flex; justify-content: space-between;
+        }
+
+        .rw-box {
+            padding: 10px; border-radius: 6px; font-size: 13px; line-height: 1.4; margin-bottom: 5px;
+        }
+        .rw-label { font-size: 9px; display: block; margin-bottom: 4px; opacity: 0.7; }
+        .rw-arrow { text-align: center; color: #555; font-size: 12px; margin: 4px 0; }
+
+        .player-unit {
+            display: flex; align-items: center; gap: 10px; margin-top: 8px;
+            background: rgba(255,255,255,0.05); padding: 8px; border-radius: 6px;
+        }
+        .p-tag { font-size: 9px; padding: 2px 4px; border-radius: 3px; background: rgba(0,0,0,0.5); color: #aaa; margin-right: 5px; }
+
+        #empty-hint { text-align: center; color: #555; margin-top: 50px; font-size: 13px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="left-region">
+        <div id="earth-header">
+            <h1>PolySpeech-100</h1>
+
+            <!-- ====== 新增: Hugging Face 数据集链接 ====== -->
+<!--            <a href="https://huggingface.co/datasets/youngseng/PolySpeech-100-v1" target="_blank" class="hf-badge">-->
+<!--                🤗 Dataset on Hugging Face-->
+<!--            </a>-->
+
+            <a href="https://huggingface.co/datasets/youngseng/PolySpeech-100-v1" target="_blank" class="hf-badge">
+                🤗 Open Dataset on HuggingFace
+            </a>
+
+            <!-- ========================================== -->
+
+            <div class="legend">
+                <div class="legend-item"><div class="dot" style="background:var(--color-vip)"></div>High-Resource</div>
+                <div class="legend-item"><div class="dot" style="background:var(--color-dialect)"></div>Dialects</div>
+                <div class="legend-item"><div class="dot" style="background:var(--color-normal)"></div>Long-Tail</div>
+            </div>
+        </div>
+
+        <div id="loader">Loading Earth...</div>
+        <div id="earth-canvas"></div> <div id="earth-panel">
+            <button class="close-btn" onclick="closeEarthPanel()">×</button>
+            <div class="panel-header" id="ep-header"></div>
+            <div class="panel-body" id="ep-body"></div>
+            <div class="panel-footer">
+                <button class="main-play-btn" onclick="playEarthSequence()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    Play Sequence
+                </button>
+                <div style="font-size:12px; font-family:monospace; color:#888;" id="earth-status">Ready</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="right-region">
+        <h2>Dialect <span>Rewrite</span></h2>
+
+        <div id="comp-list">
+            </div>
+
+        <div id="comp-detail">
+            <div id="empty-hint">Select a dialect case from the list above.</div>
+            <div id="flow-content" style="display:none;">
+                <div class="flow-card">
+                    <div class="flow-title">
+                        <span>Step 1: Rewrite</span>
+                        <span style="color:var(--color-normal)">Input</span>
+                    </div>
+                    <div class="rw-box" style="background:rgba(0,0,0,0.3); color:#888">
+                        <span class="rw-label">STANDARD INPUT</span>
+                        <div id="txt-std"></div>
+                    </div>
+                    <div class="rw-arrow">⬇ LLM Processing ⬇</div>
+                    <div class="rw-box" style="background:rgba(255,153,0,0.1); border:1px solid rgba(255,153,0,0.3); color:#fff">
+                        <span class="rw-label" style="color:var(--color-dialect)">DIALECT REWRITE</span>
+                        <div id="txt-dia" style="font-weight:500"></div>
+                    </div>
+                </div>
+
+                <div class="flow-card">
+                    <div class="flow-title">
+                        <span>Step 2: Synthesis</span>
+                        <span style="color:var(--color-vip)">Output</span>
+                    </div>
+
+                    <div class="player-unit">
+                        <button class="play-btn" id="btn-comp-std" onclick="playCompAudio('std')">▶</button>
+                        <div style="font-size:12px;">
+                            <span class="p-tag">Baseline</span> Standard
+                        </div>
+                    </div>
+
+                    <div class="player-unit" style="border:1px solid var(--color-dialect)">
+                        <button class="play-btn" id="btn-comp-dia" style="background:var(--color-dialect); color:#000" onclick="playCompAudio('dia')">▶</button>
+                        <div style="font-size:12px;">
+                            <span class="p-tag" style="background:var(--color-dialect); color:#000">Ours</span> <span style="font-weight:bold; color:var(--color-dialect)">Rewritten</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audio-left"></audio>
+    <audio id="audio-right"></audio>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script src="./db.js"></script>
+    <script src="./comparison_db.js"></script>
+
+    <script>
+        // ==========================================
+        // PART A: 左侧地球逻辑 (PolySpeech-100)
+        // ==========================================
+        (function() {
+            const audioEl = document.getElementById('audio-left');
+            const statusEl = document.getElementById('earth-status');
+            const panel = document.getElementById('earth-panel');
+            let playlist = [];
+            let curIdx = 0;
+            let isSeq = false;
+
+            // 1. Audio Logic
+            audioEl.onended = () => {
+                if(isSeq && curIdx < playlist.length - 1) {
+                    curIdx++;
+                    setTimeout(() => playTrack(curIdx), 500);
+                } else {
+                    isSeq = false;
+                    resetUI();
+                    statusEl.innerText = "Finished";
+                }
+            };
+
+            function playTrack(idx) {
+                if(idx >= playlist.length) return;
+                resetUI();
+                const item = playlist[idx];
+
+                // Highlight UI
+                const row = document.getElementById(item.rowId);
+                const btn = document.getElementById(item.btnId);
+                if(row) {
+                    row.classList.add('playing');
+                    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+                if(btn) {
+                    btn.classList.add('active');
+                    btn.innerHTML = '❚❚';
+                }
+
+                audioEl.src = item.url;
+                statusEl.innerText = "Playing: " + item.label;
+                audioEl.play().catch(e => console.error(e));
+            }
+
+            window.playSingle = (url, btnId, rowId) => {
+                isSeq = false;
+                playlist = [{url, btnId, rowId, label: 'Single Clip'}];
+                curIdx = 0;
+                playTrack(0);
+            };
+
+            window.playEarthSequence = () => {
+                const els = panel.querySelectorAll('[data-audio]');
+                if(!els.length) return;
+                playlist = Array.from(els).map(el => ({
+                    url: el.getAttribute('data-audio'),
+                    rowId: el.id,
+                    btnId: el.querySelector('.play-btn').id,
+                    label: el.getAttribute('data-label')
+                }));
+                isSeq = true;
+                curIdx = 0;
+                playTrack(0);
+            };
+
+            function resetUI() {
+                panel.querySelectorAll('.audio-row').forEach(r => r.classList.remove('playing'));
+                panel.querySelectorAll('.play-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.innerHTML = '▶';
+                });
+            }
+
+            // 2. UI Logic
+            window.closeEarthPanel = () => {
+                panel.classList.remove('active');
+                audioEl.pause();
+                resetUI();
+            };
+
+            function showPanel(key, data) {
+                panel.classList.add('active');
+
+                let typeColor = 'var(--color-normal)';
+                if(data.type === 'High-Res') typeColor = 'var(--color-vip)';
+                if(data.type === 'Dialect') typeColor = 'var(--color-dialect)';
+
+                document.getElementById('ep-header').innerHTML = `
+                    <h2 class="lang-title">${data.name}</h2>
+                    <div class="badges">
+                        <span class="badge" style="color:${typeColor}; border-color:${typeColor}">${data.type.toUpperCase()}</span>
+                        <span class="badge" style="color:#888; border-color:#555">${key}</span>
+                    </div>
+                `;
+
+                let html = '';
+                const txt = data.text || {};
+                const aud = data.audio || {};
+
+                // Passage
+                let passHtml = '';
+                const segments = txt.passage_segments || [];
+                if(aud.passages && aud.passages.length) {
+                    aud.passages.forEach((url, i) => {
+                        let segText = segments[i] || "";
+                        if(i === aud.passages.length - 1 && segments.length > aud.passages.length) {
+                            segText += " " + segments.slice(i+1).join(" ");
+                        }
+                        if(i === 0 && !segText && txt.passage_full) segText = txt.passage_full;
+                        passHtml += rowHtml(`pass-${i}`, url, `Seg ${i+1}`, segText);
+                    });
+                } else {
+                    passHtml = `<div style="color:#666; font-style:italic;">No audio.</div>`;
+                }
+                html += `<div class="section"><div class="section-title">Passage</div>${passHtml}</div>`;
+
+                // Question & Options
+                if(aud.question) {
+                    html += `<div class="section"><div class="section-title">Q & A</div>
+                        ${rowHtml('que', aud.question, 'Q', txt.question||"...", true)}
+                    `;
+                    const opts = txt.options || [];
+                    opts.forEach(o => {
+                        const url = aud.options ? aud.options[o.id] : null;
+                        const isCorrect = String(o.id) === String(txt.correct_id);
+                        const display = `<span style="color:${isCorrect?'var(--color-vip)':'#888'};font-weight:bold">${o.id}.</span> ${o.text}`;
+                        if(url) html += rowHtml(`opt-${o.id}`, url, `Opt ${o.id}`, display);
+                    });
+                    html += `</div>`;
+                }
+
+                document.getElementById('ep-body').innerHTML = html;
+            }
+
+            function rowHtml(uid, url, label, text, bold=false) {
+                return `
+                    <div class="audio-row" id="row-${uid}" data-audio="${url}" data-label="${label}">
+                        <button class="play-btn" id="btn-${uid}" onclick="playSingle('${url}', 'btn-${uid}', 'row-${uid}')">▶</button>
+                        <div class="text-content" style="${bold?'font-weight:bold;color:#fff':''}">${text}</div>
+                    </div>
+                `;
+            }
+
+            // 3. Three.js Setup
+            const container = document.getElementById('earth-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, container.offsetWidth/container.offsetHeight, 0.1, 1000);
+            camera.position.z = 3.2;
+
+            const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+            renderer.setSize(container.offsetWidth, container.offsetHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.8;
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+            sun.position.set(5,3,5);
+            scene.add(sun);
+
+            const group = new THREE.Group();
+            scene.add(group);
+
+            const texLoader = new THREE.TextureLoader();
+            const earthGeo = new THREE.SphereGeometry(1, 64, 64);
+            texLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg',
+                (tex) => {
+                    document.getElementById('loader').style.display = 'none';
+                    const mat = new THREE.MeshPhongMaterial({ map: tex, specular: 0x333333, shininess: 5 });
+                    group.add(new THREE.Mesh(earthGeo, mat));
+                }, undefined,
+                () => { // Fallback
+                    document.getElementById('loader').style.display = 'none';
+                    group.add(new THREE.Mesh(earthGeo, new THREE.MeshPhongMaterial({ color: 0x1a2b4a })));
+                }
+            );
+
+            // Markers
+            const markers = [];
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+
+            // Wait for DB
+            setTimeout(() => {
+                if(typeof WORLD_DATA !== 'undefined') {
+                    Object.keys(WORLD_DATA).forEach(key => {
+                        const d = WORLD_DATA[key];
+                        const phi = (90 - d.lat)*(Math.PI/180);
+                        const theta = (d.lng+180)*(Math.PI/180);
+                        const x = -(1.01*Math.sin(phi)*Math.cos(theta));
+                        const y = 1.01*Math.cos(phi);
+                        const z = 1.01*Math.sin(phi)*Math.sin(theta);
+
+                        let color = 0x0099ff; let scale = 1.0;
+                        if(d.type === 'High-Res') { color = 0x00ff88; scale = 1.5; }
+                        else if(d.type === 'Dialect') { color = 0xff9900; scale = 1.2; }
+
+                        const m = new THREE.Mesh(new THREE.SphereGeometry(0.012,16,16), new THREE.MeshBasicMaterial({color:color}));
+                        m.position.set(x,y,z);
+                        m.scale.set(scale,scale,scale);
+                        m.userData = {key, data:d};
+                        group.add(m);
+                        markers.push(m);
+                    });
+                }
+            }, 500);
+
+            // Interaction
+            container.addEventListener('click', e => {
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+
+                const hits = raycaster.intersectObjects(markers);
+                if(hits.length) {
+                    controls.autoRotate = false;
+                    showPanel(hits[0].object.userData.key, hits[0].object.userData.data);
+                } else {
+                   if(!panel.classList.contains('active')) controls.autoRotate = true;
+                }
+            });
+
+            function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+            animate();
+            window.addEventListener('resize', () => {
+                camera.aspect=container.offsetWidth/container.offsetHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.offsetWidth, container.offsetHeight);
+            });
+        })();
+
+        // ==========================================
+        // PART B: 右侧 Comparison 逻辑
+        // ==========================================
+        (function() {
+            const listEl = document.getElementById('comp-list');
+            const audioEl = document.getElementById('audio-right');
+            let currentAudio = { std: "", dia: "" };
+
+            // 1. Render List
+            setTimeout(() => {
+                if (typeof COMPARISON_DATA !== 'undefined') {
+                    COMPARISON_DATA.forEach((item, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'comp-item';
+                        div.id = `comp-case-${index}`;
+                        div.innerHTML = `
+                            <div class="comp-title">${item.name}</div>
+                            <div class="comp-subtitle">${item.scene}</div>
+                        `;
+                        div.onclick = () => selectCase(index);
+                        listEl.appendChild(div);
+                    });
+                }
+            }, 600);
+
+            // 2. Interaction
+            function selectCase(index) {
+                const data = COMPARISON_DATA[index];
+
+                // Highlight
+                document.querySelectorAll('.comp-item').forEach(e => e.classList.remove('active'));
+                document.getElementById(`comp-case-${index}`).classList.add('active');
+
+                // Show Content
+                document.getElementById('empty-hint').style.display = 'none';
+                document.getElementById('flow-content').style.display = 'block';
+
+                // Fill Text
+                document.getElementById('txt-std').innerText = data.text_std;
+                document.getElementById('txt-dia').innerText = data.text_dia;
+
+                // Set Audio
+                currentAudio.std = data.audio_std;
+                currentAudio.dia = data.audio_dia;
+
+                // Reset Play Buttons
+                resetCompBtns();
+            }
+
+            function resetCompBtns() {
+                ['std', 'dia'].forEach(t => {
+                    const btn = document.getElementById(`btn-comp-${t}`);
+                    if(btn) btn.innerHTML = '▶';
+                });
+            }
+
+            window.playCompAudio = (type) => {
+                resetCompBtns();
+                const src = currentAudio[type];
+                if (!src) return;
+
+                const btn = document.getElementById(`btn-comp-${type}`);
+                btn.innerHTML = '❚❚';
+
+                audioEl.src = src;
+                audioEl.play().catch(e => console.error(e));
+
+                audioEl.onended = () => {
+                    btn.innerHTML = '▶';
+                };
+            };
+        })();
+    </script>
+</body>
+</html>
