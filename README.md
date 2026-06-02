@@ -1,6 +1,6 @@
 # PolySpeech-100 Benchmark
 
-[![arXiv](https://img.shields.io/badge/arXiv-Extended_Version-B31B1B.svg)]([https://arxiv.org/abs/2606.01016])
+[![arXiv](https://img.shields.io/badge/arXiv-Extended_Version-B31B1B.svg)](https://arxiv.org/abs/2606.01016)
 [![Demo](https://img.shields.io/badge/Demo-Interactive_Map-success.svg)](https://youngseng.github.io/PolySpeech-100/)
 [![Leaderboard](https://img.shields.io/badge/Leaderboard-Full_Results-yellow.svg)](https://youngseng.github.io/PolySpeech-100/benchmark.html)
 [![Dataset](https://img.shields.io/badge/Dataset-Hugging_Face-blue.svg)](https://huggingface.co/datasets/youngseng/PolySpeech-100-v1)
