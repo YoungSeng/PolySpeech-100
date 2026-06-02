@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PolySpeech-100 Leaderboard</title>
+<!--  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">-->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='%23fbbf24' d='M20 20 h60 v20 c0 15 -10 30 -30 35 c-20 -5 -30 -20 -30 -35 z'/><rect fill='%23d97706' x='42' y='75' width='16' height='15'/><rect fill='%23b45309' x='25' y='90' width='50' height='10' rx='3'/><path fill='none' stroke='%23fbbf24' stroke-width='8' stroke-linecap='round' d='M20 30 c-15 0 -15 20 0 10 M80 30 c15 0 15 20 0 10'/></svg>">
+<!--  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%232563eb'/><path fill='%23ffffff' d='M25 25 h50 v20 c0 15 -15 30 -25 35 c-10 -5 -25 -20 -25 -35 z'/><rect fill='%2393c5fd' x='42' y='80' width='16' height='10'/><rect fill='%23bfdbfe' x='30' y='90' width='40' height='10' rx='5'/></svg>">-->
+<!--  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='none' stroke='%23334155' stroke-width='8' stroke-linejoin='round' d='M25 15 h50 v25 c0 15 -10 25 -25 30 c-15 -5 -25 -15 -25 -30 z'/><path fill='none' stroke='%23334155' stroke-width='8' stroke-linecap='round' d='M25 25 c-15 0 -15 20 0 10 M75 25 c15 0 15 20 0 10 M50 70 v20 M30 90 h40'/></svg>">-->
+<!--  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='%23f59e0b' stroke='%23b45309' stroke-width='4' stroke-linejoin='round' d='M10 80 l10 -50 l20 20 l10 -30 l10 30 l20 -20 l10 50 z'/><rect fill='%23d97706' x='10' y='85' width='80' height='10' rx='5'/></svg>">-->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #1e293b;
+      background-color: #f1f5f9;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1050px;
+      margin-top: 45px;
+      margin-bottom: 40px;
+      background: #fff;
+      padding: 45px 40px;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px -10px rgba(0,0,0,0.08);
+    }
+
+    h1 { font-size: 2.3rem; text-align: center; margin-bottom: 12px; font-weight: 700; letter-spacing: -0.03em; color: #0f172a;}
+
+    .badges {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    /* 视图切换按钮样式 - 仅保留两个核心视图 */
+    .view-selector {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 25px;
+      background: #f8fafc;
+      /*padding: 6px;*/
+        padding: 4px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .view-btn {
+      border: none;
+      background: transparent;
+      /*padding: 8px 20px;*/
+      /*font-size: 0.95rem;*/
+        padding: 4px 24px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 7px;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+    .view-btn.active {
+      background: #fff;
+      color: #2563eb;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    /* 表格样式优化 */
+    .table-container {
+      margin-top: 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; text-align: center; font-variant-numeric: tabular-nums; }
+    th {
+      background-color: #f8fafc;
+      padding: 12px 16px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      border-bottom: 2px solid #cbd5e1;
+      font-size: 0.95rem;
+    }
+    td { padding: 9px 16px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.92rem;}
+
+    tbody tr:nth-child(even) { background-color: #f8fafc; }
+    tbody tr:hover { background-color: #f1f5f9; }
+
+    .best-score { font-weight: 700; color: #16a34a; }
+
+    .model-name { font-weight: 600; color: #2563eb; text-align: left; font-size: 15px; }
+    .model-org { font-size: 13px; color: #64748b; font-weight: 400; text-align: left; margin-top: 2px;}
+
+    /* 动态排名颜色 */
+    .rank-cell { font-weight: bold; color: #64748b; width: 50px;}
+    .rank-top-1 { color: #ca8a04 !important; font-size: 17px !important; }
+    .rank-top-2, .rank-top-3 { color: #94a3b8 !important; font-size: 16px !important; }
+
+    .notes-box {
+      background-color: #f8fafc;
+      border-radius: 8px;
+      padding: 18px 24px;
+      margin-top: 30px;
+      border: 1px dashed #cbd5e1;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>🎙️ PolySpeech-100 Benchmark</h1>
+  <p class="text-center text-muted mb-4" style="font-size: 1.05rem;">A Large-Scale Benchmark for Speech Understanding Across 100+ Languages and Dialects</p>
+
+  <div class="badges">
+    <a href="https://github.com/YoungSeng/PolySpeech-100"><img src="https://img.shields.io/badge/GitHub-Code-181717.svg?logo=github" alt="GitHub"></a>
+    <a href="https://arxiv.org/abs/2606.01016"><img src="https://img.shields.io/badge/arXiv-2606.01016-B31B1B.svg" alt="arXiv"></a>
+    <a href="./index.html"><img src="https://img.shields.io/badge/Demo-Interactive_Map-success.svg" alt="Interactive Demo"></a>
+    <a href="https://huggingface.co/datasets/youngseng/PolySpeech-100-v1"><img src="https://img.shields.io/badge/Dataset-Hugging_Face-blue.svg" alt="Dataset"></a>
+  </div>
+
+  <div class="view-selector">
+    <button class="view-btn active" onclick="filterTable('all', this)">All Models</button>
+    <button class="view-btn" onclick="filterTable('e2e', this)">Non-Cascade (E2E Only)</button>
+  </div>
+
+  <div class="table-container">
+    <table id="leaderboard-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th class="text-start">Model</th>
+          <th title="Sort">Overall (%)</th>
+          <th>High-Res</th>
+          <th>CN-Dialect</th>
+          <th>Low-Res</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard-body">
+        <tr data-cat="st2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Gemini-3-flash</div><div class="model-org">Google DeepMind</div></td>
+          <td class="best-score">85.30</td><td class="best-score">94.26</td><td class="best-score">83.54</td><td class="best-score">84.61</td>
+        </tr>
+        <tr data-cat="st2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">GPT-Audio-mini</div><div class="model-org">OpenAI</div></td>
+          <td>56.63</td><td>83.56</td><td>55.58</td><td>53.56</td>
+        </tr>
+        <tr data-cat="cascade">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Whisper-v3 + Qwen2.5</div><div class="model-org">OpenAI & Alibaba</div></td>
+          <td>53.86</td><td>83.74</td><td>62.62</td><td>48.12</td>
+        </tr>
+        <tr data-cat="st2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Fun-Audio-Chat</div><div class="model-org">Alibaba</div></td>
+          <td>52.88</td><td>84.82</td><td>77.06</td><td>43.26</td>
+        </tr>
+        <tr data-cat="cascade">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Qwen3-ASR + Qwen3</div><div class="model-org">Alibaba</div></td>
+          <td>52.66</td><td>84.28</td><td>73.93</td><td>43.77</td>
+        </tr>
+        <tr data-cat="cascade">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Qwen3-ASR + Qwen2.5</div><div class="model-org">Alibaba</div></td>
+          <td>52.29</td><td>81.80</td><td>72.36</td><td>43.94</td>
+        </tr>
+        <tr data-cat="cascade">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Whisper-v3 + Qwen3</div><div class="model-org">OpenAI & Alibaba</div></td>
+          <td>51.56</td><td>80.17</td><td>59.82</td><td>46.09</td>
+        </tr>
+        <tr data-cat="st2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Qwen2.5-Omni</div><div class="model-org">Alibaba</div></td>
+          <td>50.89</td><td>84.94</td><td>78.61</td><td>40.18</td>
+        </tr>
+        <tr data-cat="st2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">MiniCPM-o 4.5</div><div class="model-org">OpenBMB</div></td>
+          <td>50.57</td><td>78.25</td><td>59.24</td><td>45.12</td>
+        </tr>
+        <tr data-cat="st2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Audio-Omni</div><div class="model-org">HKUST & Tencent & PKU</div></td>
+          <td>46.62</td><td>77.50</td><td>71.95</td><td>36.86</td>
+        </tr>
+        <tr data-cat="cascade">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Qwen3-ASR + Llama-3.1</div><div class="model-org">Alibaba & Meta</div></td>
+          <td>45.00</td><td>66.81</td><td>58.31</td><td>39.18</td>
+        </tr>
+        <tr data-cat="cascade">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Whisper-v3 + Llama-3.1</div><div class="model-org">OpenAI & Meta</div></td>
+          <td>43.59</td><td>62.74</td><td>46.86</td><td>40.46</td>
+        </tr>
+        <tr data-cat="st2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">MiMo-Audio</div><div class="model-org">Xiaomi LLM-Core</div></td>
+          <td>43.51</td><td>61.09</td><td>76.03</td><td>33.72</td>
+        </tr>
+        <tr data-cat="st2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Step-Audio-2</div><div class="model-org">StepFun</div></td>
+          <td>40.52</td><td>60.44</td><td>68.17</td><td>31.57</td>
+        </tr>
+        <tr data-cat="cascade">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Whisper-v3 + Llama-3.2</div><div class="model-org">OpenAI & Meta</div></td>
+          <td>39.01</td><td>59.20</td><td>44.98</td><td>35.12</td>
+        </tr>
+        <tr data-cat="cascade">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Qwen3-ASR + Llama-3.2</div><div class="model-org">Alibaba & Meta</div></td>
+          <td>38.21</td><td>57.04</td><td>49.36</td><td>33.27</td>
+        </tr>
+        <tr data-cat="st2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Qwen2-Audio</div><div class="model-org">Alibaba</div></td>
+          <td>25.94</td><td>26.59</td><td>25.40</td><td>25.99</td>
+        </tr>
+        <tr data-cat="s2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Covo-Audio</div><div class="model-org">Tencent</div></td>
+          <td>24.78</td><td>26.68</td><td>18.75</td><td>25.96</td>
+        </tr>
+        <tr data-cat="s2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">PersonaPlex</div><div class="model-org">NVIDIA</div></td>
+          <td>23.67</td><td>24.25</td><td>22.43</td><td>23.89</td>
+        </tr>
+        <tr data-cat="s2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">LLaMA-Omni2</div><div class="model-org">CAS (ICT & UCAS)</div></td>
+          <td>21.88</td><td>22.87</td><td>20.26</td><td>22.14</td>
+        </tr>
+        <tr data-cat="s2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Mini-Omni</div><div class="model-org">Inspirai & Tsinghua Univ.</div></td>
+          <td>21.83</td><td>17.64</td><td>22.91</td><td>22.10</td>
+        </tr>
+        <tr data-cat="s2t">
+          <td class="rank-cell"></td>
+          <td><div class="model-name">Moshi</div><div class="model-org">Kyutai</div></td>
+          <td>20.96</td><td>25.46</td><td>17.78</td><td>21.15</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="notes-box">
+    <h3 style="margin-top: 0;">📝 Notes</h3>
+    <ul class="text-muted mb-0" style="padding-left: 1.2rem;">
+      <li>If you have any questions or would like to submit new results to this leaderboard, please <strong><a href="mailto:yangsc25@mails.tsinghua.edu.cn?subject=PolySpeech-100%20Submission" style="color: #2563eb; text-decoration: none;">contact us</a></strong>.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+// 核心逻辑：过滤表格并重新排名
+function filterTable(view, btn) {
+    // 1. 更新按钮状态
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const rows = document.querySelectorAll('#leaderboard-body tr');
+    let visibleRank = 1;
+
+    rows.forEach(row => {
+        const cat = row.getAttribute('data-cat');
+        let show = false;
+
+        if (view === 'all') {
+            show = true;
+        } else if (view === 'e2e') {
+            // 纯端到端架构：排除 cascade
+            if (cat === 'st2t' || cat === 's2t') show = true;
+        }
+
+        if (show) {
+            row.style.display = '';
+            // 更新排名数字和样式
+            const rankCell = row.querySelector('.rank-cell');
+            rankCell.innerText = visibleRank;
+
+            // 清除旧排名样式
+            rankCell.classList.remove('rank-top-1', 'rank-top-2', 'rank-top-3');
+            if (visibleRank === 1) rankCell.classList.add('rank-top-1');
+            else if (visibleRank === 2) rankCell.classList.add('rank-top-2');
+            else if (visibleRank === 3) rankCell.classList.add('rank-top-3');
+
+            visibleRank++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// 初始化排名（页面加载时执行）
+document.addEventListener('DOMContentLoaded', () => {
+    filterTable('all', document.querySelector('.view-btn.active'));
+});
+
+// 排序功能保持 (对可见行排序)
+document.querySelectorAll('th').forEach((header, index) => {
+    if(index === 0 || index === 1) return;
+    header.addEventListener('click', () => {
+        const tbody = document.getElementById('leaderboard-body');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const isAsc = header.classList.contains('asc');
+
+        rows.sort((a, b) => {
+            const valA = parseFloat(a.cells[index].innerText);
+            const valB = parseFloat(b.cells[index].innerText);
+            return isAsc ? valA - valB : valB - valA;
+        });
+
+        // 重置所有表头箭头
+        document.querySelectorAll('th').forEach(th => th.classList.remove('asc', 'desc'));
+        header.classList.add(isAsc ? 'desc' : 'asc');
+
+        rows.forEach(row => tbody.appendChild(row));
+
+        // 排序后重新调用过滤逻辑以更新序号
+        const activeBtn = document.querySelector('.view-btn.active');
+        const currentView = activeBtn.innerText.includes('All') ? 'all' : 'e2e';
+        filterTable(currentView, activeBtn);
+    });
+});
+</script>
+
+</body>
+</html>
