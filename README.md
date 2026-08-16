@@ -114,13 +114,11 @@ python evaluate.py
 If you find this benchmark useful for your research, please consider citing our paper:
 
 ```
-@misc{yang2026polyspeech100largescalebenchmarkspeech,
-      title={PolySpeech-100: A Large-Scale Benchmark for Speech Understanding Across 100+ Languages and Dialects}, 
-      author={Sicheng Yang and Shulan Ruan and Shiwei Wu and Yu Liu and Lu Fan and Zhi Li and You He},
-      year={2026},
-      eprint={2606.01016},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2606.01016}, 
+@inproceedings{yang2026polyspeech,
+  title={PolySpeech-100: A Large-Scale Benchmark for Speech Understanding Across 100+ Languages and Dialects},
+  author={Yang, Sicheng and Ruan, Shulan and Wu, Shiwei and Liu, Yu and Fan, Lu and Li, Zhi and He, You},
+  booktitle={Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining V. 2},
+  pages={10198--10209},
+  year={2026}
 }
 ```
